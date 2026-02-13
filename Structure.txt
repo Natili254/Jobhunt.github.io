@@ -1,0 +1,19 @@
+job-hunt-app/
+│
+├── backend/
+│   ├── server.js
+│   ├── db.js
+│   ├── routes/
+│   │     ├── auth.js
+│   │     ├── jobs.js
+│   │     └── applications.js
+│   └── middleware/authMiddleware.js
+│
+├── frontend/
+│   ├── index.html
+│   ├── login.html
+│   ├── dashboard.html
+│   ├── app.js
+│   └── style.css
+│
+└── database.sql

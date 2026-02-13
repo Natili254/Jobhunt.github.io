@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Hunt Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ===== NAVBAR ===== -->
+    <div class="navbar">
+    <h1>Job Hunt</h1>
+
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <div id="nav-buttons"></div>
+    </div>
+</div>
+
+
+    <!-- ===== SEARCH BAR ===== -->
+    <h2>Find Your Dream Job</h2>
+
+    <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="Search by job title or company..."
+        onkeyup="searchJobs()"
+    />
+
+    <!-- ===== BANNER ===== -->
+    <div class="banner">
+        <h3>Welcome to Job Hunt</h3>
+        <p>Discover thousands of job opportunities tailored to your skills and interests. Whether you're starting your career or looking for your next big challenge, Job Hunt connects you with employers worldwide. Create an account today to apply for jobs, track your applications, and land your dream role!</p>
+    </div>
+
+    <!-- ===== JOB LIST ===== -->
+    <div id="jobs"></div>
+
+</div>
+
+
+<script>
+const API_BASE = "http://localhost:5000"; // Use empty string for production (same origin) and localhost for development
+
+let allJobs = [];
+
+function goToLogin() {
+    localStorage.setItem("authTab", "login");
+    window.location.href = "login.html";
+}
+
+function goToRegister() {
+    localStorage.setItem("authTab", "register");
+    window.location.href = "login.html";
+}
+
+function logoutUser() {
+    localStorage.removeItem("token");
+    updateNavButtons();
+}
+
+function updateNavButtons() {
+    const token = localStorage.getItem("token");
+    const navButtons = document.getElementById("nav-buttons");
+
+    if (token) {
+        navButtons.innerHTML = `
+            <a href="index.html"><button style="background-color: #2196F3; color: white;">My Jobs</button></a>
+            <button onclick="logoutUser()" style="background-color: #f44336; color: white;">Logout</button>
+        `;
+    } else {
+        navButtons.innerHTML = `
+            <button onclick="goToLogin()" style="background-color: #2196F3; color: white;">Login</button>
+            <button onclick="goToRegister()" style="background-color: white; color: #4CAF50; border: 2px solid white;">Register</button>
+        `;
+    }
+}
+
+async function loadJobs() {
+    try {
+        const response = await fetch(`${API_BASE}/api/jobs`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const jobs = await response.json();
+        allJobs = jobs;
+        displayJobs(jobs);
+    } catch (error) {
+        document.getElementById("jobs").innerHTML = `
+            <div style="padding: 20px; background: #ffebee; border-radius: 8px; color: #c62828;">
+                <h3>Failed to load jobs</h3>
+                <p>Error: ${error.message}</p>
+                <p>Make sure the backend is running on http://localhost:5000</p>
+            </div>
+        `;
+    }
+}
+
+function displayJobs(jobs) {
+    const jobsDiv = document.getElementById("jobs");
+    jobsDiv.innerHTML = "";
+
+    jobs.forEach((job) => {
+        jobsDiv.innerHTML += `
+            <div class="job">
+                <h3>${job.title}</h3>
+                <p><strong>Company:</strong> ${job.company}</p>
+                <p><strong>Location:</strong> ${job.location}</p>
+                <p><strong>Salary:</strong> ${job.salary}</p>
+                <p>${job.description}</p>
+            </div>
+        `;
+    });
+}
+
+function searchJobs() {
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered = allJobs.filter((job) =>
+        job.title.toLowerCase().includes(searchValue) ||
+        job.company.toLowerCase().includes(searchValue)
+    );
+
+    displayJobs(filtered);
+}
+
+updateNavButtons();
+loadJobs();
+</script>
+
+</body>
+</html>
+ 

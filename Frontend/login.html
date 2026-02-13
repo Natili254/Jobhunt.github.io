@@ -1,0 +1,410 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Hunt - Login & Register</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-container {
+            max-width: 450px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .auth-container h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background-color: #d0d0d0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+
+        .form-group button:active {
+            transform: scale(0.98);
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<div class="navbar">
+    <h1 onclick="window.location.href='index.html'">Job Hunt</h1>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+    </div>
+</div>
+
+<!-- ===== AUTH SECTION ===== -->
+<div class="auth-container">
+    <h1>Welcome Back!</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="login" onclick="switchTab(this)">Login</button>
+        <button class="tab-btn" data-tab="register" onclick="switchTab(this)">Register</button>
+    </div>
+
+    <!-- ===== LOGIN FORM ===== -->
+    <div id="login" class="tab-content active">
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="login-email" 
+                    placeholder="Enter your email" 
+                    required 
+                />
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input 
+                    type="password" 
+                    id="login-password" 
+                    placeholder="Enter your password" 
+                    required 
+                />
+            </div>
+            <div class="form-group">
+                <button type="submit">Login</button>
+            </div>
+        </form>
+        <div id="login-message"></div>
+    </div>
+
+    <!-- ===== REGISTER FORM ===== -->
+    <div id="register" class="tab-content">
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="register-name">Full Name</label>
+                <input 
+                    type="text" 
+                    id="register-name" 
+                    placeholder="Enter your full name" 
+                    required 
+                />
+            </div>
+            <div class="form-group">
+                <label for="register-email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="register-email" 
+                    placeholder="Enter your email" 
+                    required 
+                />
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input 
+                    type="password" 
+                    id="register-password" 
+                    placeholder="Create a strong password" 
+                    required 
+                    minlength="6"
+                />
+                <div class="password-requirements">
+                    Password must be at least 6 characters long
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="register-role">I am a:</label>
+                <select id="register-role" required>
+                    <option value="">Select your role</option>
+                    <option value="user">Job Seeker</option>
+                    <option value="employer">Employer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit">Create Account</button>
+            </div>
+        </form>
+        <div id="register-message"></div>
+    </div>
+</div>
+
+<script>
+
+// ===== CHECK IF USER IS ALREADY LOGGED IN =====
+const API_BASE = "http://localhost:5000";
+const token = localStorage.getItem("token");
+if (token) {
+    window.location.href = "index.html";
+}
+
+// ===== CHECK WHICH TAB TO SHOW =====
+const authTab = localStorage.getItem("authTab");
+if (authTab === "register") {
+    switchTab(document.querySelector('.tab-btn[data-tab="register"]'));
+    localStorage.removeItem("authTab");
+}
+
+// ===== SWITCH BETWEEN LOGIN AND REGISTER TABS =====
+function switchTab(buttonOrTab) {
+    let tab;
+    
+    if (typeof buttonOrTab === 'string') {
+        tab = buttonOrTab;
+    } else {
+        tab = buttonOrTab.getAttribute("data-tab");
+    }
+    
+    // Hide all tabs
+    document.getElementById("login").classList.remove("active");
+    document.getElementById("register").classList.remove("active");
+    
+    // Remove active class from all buttons
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    
+    // Show selected tab
+    document.getElementById(tab).classList.add("active");
+    
+    // Add active class to the corresponding button
+    document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
+    
+    // Clear messages
+    document.getElementById("login-message").innerHTML = "";
+    document.getElementById("register-message").innerHTML = "";
+}
+
+// ===== HANDLE LOGIN =====
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    const messageDiv = document.getElementById("login-message");
+    messageDiv.innerHTML = '<div class="message">Logging in...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.token) {
+            localStorage.setItem("token", data.token);
+            messageDiv.innerHTML = '<div class="message success">âœ“ Login successful! Redirecting...</div>';
+            
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 1500);
+        } else {
+            messageDiv.innerHTML = `<div class="message error">âœ— ${data.message || 'Login failed'}</div>`;
+        }
+    } catch (error) {
+        messageDiv.innerHTML = `<div class="message error">âœ— Error: ${error.message}</div>`;
+    }
+});
+
+// ===== HANDLE REGISTER =====
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("register-name").value.trim();
+    const email = document.getElementById("register-email").value.trim();
+    const password = document.getElementById("register-password").value;
+    const role = document.getElementById("register-role").value;
+
+    const messageDiv = document.getElementById("register-message");
+    
+    // Validation
+    if (!name || !email || !password || !role) {
+        messageDiv.innerHTML = '<div class="message error">âœ— All fields are required</div>';
+        return;
+    }
+
+    if (password.length < 6) {
+        messageDiv.innerHTML = '<div class="message error">âœ— Password must be at least 6 characters</div>';
+        return;
+    }
+
+    messageDiv.innerHTML = '<div class="message">Creating your account...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ name, email, password, role })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            messageDiv.innerHTML = '<div class="message success">âœ“ Registration successful! Please login now.</div>';
+            
+            setTimeout(() => {
+                document.getElementById("registerForm").reset();
+                switchTab("login");
+            }, 2000);
+        } else {
+            messageDiv.innerHTML = `<div class="message error">âœ— ${data.message || 'Registration failed'}</div>`;
+        }
+    } catch (error) {
+        messageDiv.innerHTML = `<div class="message error">âœ— Error: ${error.message}</div>`;
+    }
+});
+
+</script>
+
+</body>
+</html>
