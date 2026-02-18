@@ -180,21 +180,25 @@
         .password-row input {
             margin: 0;
             flex: 1;
+            width: auto;
+            min-width: 0;
         }
 
-        .toggle-password {
+        .form-group .toggle-password {
             width: auto;
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: none;
             border-radius: 6px;
             background: #64748b;
             color: #fff;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             white-space: nowrap;
+            margin: 0;
+            flex: 0 0 auto;
         }
 
-        .toggle-password:hover {
+        .form-group .toggle-password:hover {
             background: #475569;
         }
     </style>
@@ -334,7 +338,11 @@
 
 <script>
 
-const apiCandidates = ["http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000", ""];
+const hostName = window.location.hostname;
+const localHostCandidates = hostName && hostName !== "localhost" && hostName !== "127.0.0.1"
+    ? [`http://${hostName}:5001`, `http://${hostName}:5000`]
+    : [];
+const apiCandidates = [...localHostCandidates, "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000", ""];
 
 async function apiFetch(path, options = {}) {
     let lastError = "Unable to connect to backend";
