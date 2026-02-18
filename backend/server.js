@@ -1,5 +1,6 @@
 const path = require("path");
 const os = require("os");
+const fs = require("fs");
 require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
 const express = require("express");
 const cors = require("cors");
@@ -16,8 +17,18 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "15mb" }));
 
-const frontendDir = path.join(__dirname, "..", "frontend");
-app.use(express.static(frontendDir));
+const frontendCandidates = [
+    path.join(__dirname, "..", "Frontend"),
+    path.join(__dirname, "..", "frontend"),
+    path.join(__dirname, "..")
+];
+const frontendDir = frontendCandidates.find((dir) => fs.existsSync(path.join(dir, "index.html")));
+
+if (frontendDir) {
+    app.use(express.static(frontendDir));
+} else {
+    console.warn("Frontend directory not found. Checked:", frontendCandidates.join(", "));
+}
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/health", (req, res) => {
@@ -45,6 +56,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobsRoutes);
 
 app.get("/", (req, res) => {
+    if (!frontendDir) {
+        return res.status(500).json({ message: "Frontend build not found on server" });
+    }
     res.sendFile(path.join(frontendDir, "index.html"));
 });
 

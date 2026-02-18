@@ -1,6 +1,7 @@
--- Create users table
+-- PostgreSQL schema
+
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -8,9 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create jobs table
 CREATE TABLE IF NOT EXISTS jobs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     company VARCHAR(255) NOT NULL,
     location VARCHAR(255),
@@ -19,23 +19,22 @@ CREATE TABLE IF NOT EXISTS jobs (
     requirements TEXT,
     employment_type VARCHAR(100),
     application_deadline DATE,
-    posted_by INT,
+    posted_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     contact_email VARCHAR(255),
     category VARCHAR(120) DEFAULT 'Others',
-    entry_level TINYINT(1) DEFAULT 0,
-    no_degree_required TINYINT(1) DEFAULT 0,
-    remote_job TINYINT(1) DEFAULT 0,
-    part_time TINYINT(1) DEFAULT 0,
-    high_paying TINYINT(1) DEFAULT 0,
-    fast_hiring TINYINT(1) DEFAULT 0,
+    entry_level BOOLEAN DEFAULT FALSE,
+    no_degree_required BOOLEAN DEFAULT FALSE,
+    remote_job BOOLEAN DEFAULT FALSE,
+    part_time BOOLEAN DEFAULT FALSE,
+    high_paying BOOLEAN DEFAULT FALSE,
+    fast_hiring BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create applications table
 CREATE TABLE IF NOT EXISTS applications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    job_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
     resume_link VARCHAR(255),
     qualification_text TEXT,
     document_name VARCHAR(255),
@@ -47,13 +46,14 @@ CREATE TABLE IF NOT EXISTS applications (
     phone VARCHAR(100),
     cover_letter TEXT,
     status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample jobs
-INSERT INTO jobs (title, company, location, salary, description) VALUES
-('Software Engineer', 'Tech Corp', 'San Francisco, CA', '$120k-150k', 'Build scalable web applications'),
-('Product Manager', 'StartupXYZ', 'New York, NY', '$100k-130k', 'Lead product strategy'),
-('Data Scientist', 'DataWorks', 'Remote', '$110k-140k', 'Analyze and visualize data');
+INSERT INTO jobs (title, company, location, salary, description)
+SELECT * FROM (
+    VALUES
+        ('Software Engineer', 'Tech Corp', 'San Francisco, CA', '$120k-150k', 'Build scalable web applications'),
+        ('Product Manager', 'StartupXYZ', 'New York, NY', '$100k-130k', 'Lead product strategy'),
+        ('Data Scientist', 'DataWorks', 'Remote', '$110k-140k', 'Analyze and visualize data')
+) AS seed(title, company, location, salary, description)
+WHERE NOT EXISTS (SELECT 1 FROM jobs);

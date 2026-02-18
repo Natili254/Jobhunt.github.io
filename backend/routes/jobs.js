@@ -122,29 +122,29 @@ async function addColumnIfMissing(table, column, definition) {
 }
 
 async function ensureSchema() {
-    await addColumnIfMissing("jobs", "requirements", "TEXT NULL");
-    await addColumnIfMissing("jobs", "employment_type", "VARCHAR(100) NULL");
-    await addColumnIfMissing("jobs", "application_deadline", "DATE NULL");
-    await addColumnIfMissing("jobs", "posted_by", "INT NULL");
-    await addColumnIfMissing("jobs", "contact_email", "VARCHAR(255) NULL");
+    await addColumnIfMissing("jobs", "requirements", "TEXT");
+    await addColumnIfMissing("jobs", "employment_type", "VARCHAR(100)");
+    await addColumnIfMissing("jobs", "application_deadline", "DATE");
+    await addColumnIfMissing("jobs", "posted_by", "INTEGER");
+    await addColumnIfMissing("jobs", "contact_email", "VARCHAR(255)");
     await addColumnIfMissing("jobs", "category", "VARCHAR(120) DEFAULT 'Others'");
-    await addColumnIfMissing("jobs", "entry_level", "TINYINT(1) DEFAULT 0");
-    await addColumnIfMissing("jobs", "no_degree_required", "TINYINT(1) DEFAULT 0");
-    await addColumnIfMissing("jobs", "remote_job", "TINYINT(1) DEFAULT 0");
-    await addColumnIfMissing("jobs", "part_time", "TINYINT(1) DEFAULT 0");
-    await addColumnIfMissing("jobs", "high_paying", "TINYINT(1) DEFAULT 0");
-    await addColumnIfMissing("jobs", "fast_hiring", "TINYINT(1) DEFAULT 0");
+    await addColumnIfMissing("jobs", "entry_level", "BOOLEAN DEFAULT FALSE");
+    await addColumnIfMissing("jobs", "no_degree_required", "BOOLEAN DEFAULT FALSE");
+    await addColumnIfMissing("jobs", "remote_job", "BOOLEAN DEFAULT FALSE");
+    await addColumnIfMissing("jobs", "part_time", "BOOLEAN DEFAULT FALSE");
+    await addColumnIfMissing("jobs", "high_paying", "BOOLEAN DEFAULT FALSE");
+    await addColumnIfMissing("jobs", "fast_hiring", "BOOLEAN DEFAULT FALSE");
     await addColumnIfMissing("jobs", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
 
-    await addColumnIfMissing("applications", "qualification_text", "TEXT NULL");
-    await addColumnIfMissing("applications", "document_name", "VARCHAR(255) NULL");
-    await addColumnIfMissing("applications", "document_path", "VARCHAR(255) NULL");
-    await addColumnIfMissing("applications", "full_name", "VARCHAR(255) NULL");
-    await addColumnIfMissing("applications", "applicant_email", "VARCHAR(255) NULL");
-    await addColumnIfMissing("applications", "phone", "VARCHAR(100) NULL");
-    await addColumnIfMissing("applications", "cover_letter", "TEXT NULL");
-    await addColumnIfMissing("applications", "other_document_name", "VARCHAR(255) NULL");
-    await addColumnIfMissing("applications", "other_document_path", "VARCHAR(255) NULL");
+    await addColumnIfMissing("applications", "qualification_text", "TEXT");
+    await addColumnIfMissing("applications", "document_name", "VARCHAR(255)");
+    await addColumnIfMissing("applications", "document_path", "VARCHAR(255)");
+    await addColumnIfMissing("applications", "full_name", "VARCHAR(255)");
+    await addColumnIfMissing("applications", "applicant_email", "VARCHAR(255)");
+    await addColumnIfMissing("applications", "phone", "VARCHAR(100)");
+    await addColumnIfMissing("applications", "cover_letter", "TEXT");
+    await addColumnIfMissing("applications", "other_document_name", "VARCHAR(255)");
+    await addColumnIfMissing("applications", "other_document_path", "VARCHAR(255)");
     await addColumnIfMissing("applications", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
 }
 
@@ -219,12 +219,12 @@ router.post("/", auth, async (req, res) => {
                 req.user.id,
                 contactEmail || null,
                 normalizedCategory,
-                normalizedTags.entryLevel ? 1 : 0,
-                normalizedTags.noDegreeRequired ? 1 : 0,
-                normalizedTags.remoteJobs ? 1 : 0,
-                normalizedTags.partTime ? 1 : 0,
-                normalizedTags.highPaying ? 1 : 0,
-                normalizedTags.fastHiring ? 1 : 0
+                normalizedTags.entryLevel,
+                normalizedTags.noDegreeRequired,
+                normalizedTags.remoteJobs,
+                normalizedTags.partTime,
+                normalizedTags.highPaying,
+                normalizedTags.fastHiring
             ]
         );
 
