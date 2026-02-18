@@ -169,10 +169,33 @@
             border: 1px solid #f5c6cb;
         }
 
-        .password-requirements {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
+        
+
+        .password-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .password-row input {
+            margin: 0;
+            flex: 1;
+        }
+
+        .toggle-password {
+            width: auto;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #64748b;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .toggle-password:hover {
+            background: #475569;
         }
     </style>
 </head>
@@ -210,12 +233,15 @@
             </div>
             <div class="form-group">
                 <label for="login-password">Password</label>
-                <input 
-                    type="password" 
-                    id="login-password" 
-                    placeholder="Enter your password" 
-                    required 
-                />
+                <div class="password-row">
+                    <input 
+                        type="password" 
+                        id="login-password" 
+                        placeholder="Enter your password" 
+                        required 
+                    />
+                    <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)">Show</button>
+                </div>
             </div>
             <div class="form-group">
                 <button type="submit">Login</button>
@@ -247,13 +273,16 @@
             </div>
             <div class="form-group">
                 <label for="register-password">Password</label>
-                <input 
-                    type="password" 
-                    id="register-password" 
-                    placeholder="Create a strong password" 
-                    required 
-                    minlength="6"
-                />
+                <div class="password-row">
+                    <input 
+                        type="password" 
+                        id="register-password" 
+                        placeholder="Create a strong password" 
+                        required 
+                        minlength="6"
+                    />
+                    <button type="button" class="toggle-password" onclick="togglePassword('register-password', this)">Show</button>
+                </div>
                 <div class="password-requirements">
                     Password must be at least 6 characters long
                 </div>
@@ -305,7 +334,6 @@
 
 <script>
 
-// ===== API DISCOVERY =====
 const apiCandidates = ["http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000", ""];
 
 async function apiFetch(path, options = {}) {
@@ -314,7 +342,6 @@ async function apiFetch(path, options = {}) {
     for (const base of apiCandidates) {
         try {
             const response = await fetch(`${base}${path}`, options);
-            // Ignore same-origin misses from static frontend server and keep trying.
             if (base === "" && response.status === 404) {
                 lastError = "Same-origin API not found";
                 continue;
@@ -328,84 +355,90 @@ async function apiFetch(path, options = {}) {
     throw new Error(`${lastError}. Tried: ${apiCandidates.join(", ")}`);
 }
 
-// ===== CHECK IF USER IS ALREADY LOGGED IN =====
+async function readApiPayload(response) {
+    const raw = await response.text();
+    if (!raw) return {};
+    try {
+        return JSON.parse(raw);
+    } catch (err) {
+        return {
+            message: response.ok
+                ? "Unexpected response format from server."
+                : `Server error (${response.status}). Please verify backend URL and network.`
+        };
+    }
+}
+
+function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    button.textContent = isPassword ? "Hide" : "Show";
+}
+
 const token = localStorage.getItem("token");
 if (token) {
     window.location.href = "index.html";
 }
 
-// ===== CHECK WHICH TAB TO SHOW =====
 const authTab = localStorage.getItem("authTab");
 if (authTab === "register") {
     switchTab(document.querySelector('.tab-btn[data-tab="register"]'));
     localStorage.removeItem("authTab");
 }
 
-// ===== SWITCH BETWEEN LOGIN AND REGISTER TABS =====
 function switchTab(buttonOrTab) {
     let tab;
-    
-    if (typeof buttonOrTab === 'string') {
+
+    if (typeof buttonOrTab === "string") {
         tab = buttonOrTab;
     } else {
         tab = buttonOrTab.getAttribute("data-tab");
     }
-    
-    // Hide all tabs
+
     document.getElementById("login").classList.remove("active");
     document.getElementById("register").classList.remove("active");
-    
-    // Remove active class from all buttons
-    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-    
-    // Show selected tab
+    document.querySelectorAll(".tab-btn").forEach((btn) => btn.classList.remove("active"));
+
     document.getElementById(tab).classList.add("active");
-    
-    // Add active class to the corresponding button
     document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
-    
-    // Clear messages
+
     document.getElementById("login-message").innerHTML = "";
     document.getElementById("register-message").innerHTML = "";
 }
 
-// ===== HANDLE LOGIN =====
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
-
     const messageDiv = document.getElementById("login-message");
     messageDiv.innerHTML = '<div class="message">Logging in...</div>';
 
     try {
         const response = await apiFetch("/api/auth/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
 
-        const data = await response.json();
+        const data = await readApiPayload(response);
 
-        if (data.token) {
+        if (response.ok && data.token) {
             localStorage.setItem("token", data.token);
-            messageDiv.innerHTML = '<div class="message success">✓ Login successful! Redirecting...</div>';
-            
+            messageDiv.innerHTML = '<div class="message success">Login successful! Redirecting...</div>';
             setTimeout(() => {
                 window.location.href = "index.html";
-            }, 1500);
+            }, 1200);
         } else {
-            messageDiv.innerHTML = `<div class="message error">✗ ${data.message || 'Login failed'}</div>`;
+            messageDiv.innerHTML = `<div class="message error">${data.message || "Login failed"}</div>`;
         }
     } catch (error) {
-        messageDiv.innerHTML = `<div class="message error">✗ Error: ${error.message}</div>`;
+        messageDiv.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
     }
 });
 
-// ===== HANDLE REGISTER =====
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -413,17 +446,15 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     const email = document.getElementById("register-email").value.trim();
     const password = document.getElementById("register-password").value;
     const role = document.getElementById("register-role").value;
-
     const messageDiv = document.getElementById("register-message");
-    
-    // Validation
+
     if (!name || !email || !password || !role) {
-        messageDiv.innerHTML = '<div class="message error">✗ All fields are required</div>';
+        messageDiv.innerHTML = '<div class="message error">All fields are required</div>';
         return;
     }
 
     if (password.length < 6) {
-        messageDiv.innerHTML = '<div class="message error">✗ Password must be at least 6 characters</div>';
+        messageDiv.innerHTML = '<div class="message error">Password must be at least 6 characters</div>';
         return;
     }
 
@@ -432,26 +463,23 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     try {
         const response = await apiFetch("/api/auth/register", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, password, role })
         });
 
-        const data = await response.json();
+        const data = await readApiPayload(response);
 
         if (response.ok) {
-            messageDiv.innerHTML = '<div class="message success">✓ Registration successful! Please login now.</div>';
-            
+            messageDiv.innerHTML = '<div class="message success">Registration successful! Please login now.</div>';
             setTimeout(() => {
                 document.getElementById("registerForm").reset();
                 switchTab("login");
-            }, 2000);
+            }, 1200);
         } else {
-            messageDiv.innerHTML = `<div class="message error">✗ ${data.message || 'Registration failed'}</div>`;
+            messageDiv.innerHTML = `<div class="message error">${data.message || "Registration failed"}</div>`;
         }
     } catch (error) {
-        messageDiv.innerHTML = `<div class="message error">✗ Error: ${error.message}</div>`;
+        messageDiv.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
     }
 });
 
@@ -459,6 +487,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
 </body>
 </html>
+
 
 
 
