@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Applications - Job Hunt</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .panel { background: white; border-radius: 10px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .muted { color: #666; }
+        .status { margin-top: 10px; font-weight: 600; }
+        .status.err { color: #b91c1c; }
+        .application-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin: 12px 0; background: #fff; }
+        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.shortlisted { background: #e0f2fe; color: #075985; }
+        .status-badge.approved { background: #dcfce7; color: #166534; }
+        .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+        .progress-track { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .step { border: 1px solid #d1d5db; border-radius: 999px; padding: 5px 9px; font-size: 12px; color: #374151; background: #f9fafb; }
+        .step.active { border-color: #16a34a; color: #166534; background: #dcfce7; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="navbar">
+        <h1>Job Hunt</h1>
+        <div class="nav-links">
+            <a href="index.html?home=1" class="nav-link">Home</a>
+        </div>
+    </div>
+
+    <div class="banner">
+        <h3>My Applications</h3>
+        <p>Track progress reviewed by employers.</p>
+    </div>
+
+    <div class="panel">
+        <h2>Application Progress</h2>
+        <p class="muted">Current statuses: Not Yet Reviewed, Shortlisted, Approved, Rejected.</p>
+        <div id="page-status" class="status"></div>
+        <div id="applications-list"></div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div>
+                <h4 class="footer-title">Job Hunt</h4>
+                <p>Track all your submitted applications and monitor employer decisions.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Contact</h4>
+                <p>Email: natililevy65@gmail.com</p>
+                <p>Phone: 0791604923</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Quick Links</h4>
+                <ul>
+                    <li><a href="index.html?home=1">Home</a></li>
+                    <li><a href="login.html">Login / Register</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">Follow</h4>
+                <p><a href="https://www.facebook.com/share/17w3pXHKeN/" target="_blank" rel="noreferrer">Facebook</a></p>
+                <p><a href="https://www.linkedin.com/in/levy-natili-1a239b331?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noreferrer">LinkedIn</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">&copy; 2026 Job Hunt. All rights reserved.</div>
+    </footer>
+</div>
+
+<script>
+let apiBase = null;
+
+const apiCandidates = ["", "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000"];
+
+async function resolveApiBase() {
+    if (apiBase !== null) return apiBase;
+
+    for (const candidate of apiCandidates) {
+        try {
+            const res = await fetch(`${candidate}/health`);
+            if (res.ok) {
+                apiBase = candidate;
+                return apiBase;
+            }
+        } catch (err) {
+            // keep trying
+        }
+    }
+
+    apiBase = "";
+    return apiBase;
+}
+
+async function apiFetch(path, options = {}) {
+    const token = localStorage.getItem("token");
+    const base = await resolveApiBase();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers.authorization = token;
+
+    return fetch(`${base}${path}`, { ...options, headers });
+}
+
+function normalizeApplicationStatus(status) {
+    if (status === "pending") return "Not Yet Reviewed";
+    if (status === "shortlisted") return "Shortlisted";
+    if (status === "approved") return "Approved";
+    if (status === "rejected") return "Rejected";
+    return status || "Not Yet Reviewed";
+}
+
+function statusOrder(status) {
+    if (status === "pending") return 1;
+    if (status === "shortlisted") return 2;
+    if (status === "approved") return 3;
+    if (status === "rejected") return 3;
+    return 1;
+}
+
+function renderProgress(status) {
+    const order = statusOrder(status);
+    const rejected = status === "rejected";
+    return `
+        <div class="progress-track">
+            <span class="step ${order >= 1 ? "active" : ""}">Not Yet Reviewed</span>
+            <span class="step ${order >= 2 && !rejected ? "active" : ""}">Shortlisted</span>
+            <span class="step ${status === "approved" ? "active" : ""}">Approved</span>
+            <span class="step ${status === "rejected" ? "active" : ""}">Rejected</span>
+        </div>
+    `;
+}
+
+function renderApplications(rows) {
+    const holder = document.getElementById("applications-list");
+    if (!rows.length) {
+        holder.innerHTML = "<p class='muted'>You have not applied for any jobs yet.</p>";
+        return;
+    }
+
+    holder.innerHTML = rows.map((a) => `
+        <div class="application-card">
+            <p><strong>Job:</strong> ${a.job_title} (${a.company})</p>
+            <p><strong>Location:</strong> ${a.location || "N/A"}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${a.status}">${normalizeApplicationStatus(a.status)}</span></p>
+            ${renderProgress(a.status)}
+        </div>
+    `).join("");
+}
+
+async function init() {
+    const statusEl = document.getElementById("page-status");
+    const token = localStorage.getItem("token");
+    if (!token) {
+        statusEl.textContent = "Please login to view your applications.";
+        statusEl.className = "status err";
+        setTimeout(() => {
+            localStorage.setItem("authTab", "login");
+            window.location.href = "login.html";
+        }, 900);
+        return;
+    }
+
+    try {
+        const profileRes = await apiFetch("/api/auth/profile");
+        if (!profileRes.ok) throw new Error("Your session expired. Please login again.");
+        const profile = await profileRes.json();
+        const role = profile?.user?.role;
+        if (role === "employer") {
+            throw new Error("This page is for job seekers.");
+        }
+
+        const res = await apiFetch("/api/jobs/applications/me");
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.message || "Failed to load applications");
+        renderApplications(body.applications || []);
+    } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+    }
+}
+
+init();
+</script>
+</body>
+</html>
+
+

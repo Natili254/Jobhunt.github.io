@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
 const mysql = require("mysql2");
 
 // Use a pool to avoid crashing the app if the DB is temporarily unavailable.
@@ -23,4 +24,8 @@ pool.getConnection((err, connection) => {
 });
 
 module.exports = pool;
+
+
+
+
 

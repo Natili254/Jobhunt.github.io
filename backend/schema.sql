@@ -17,7 +17,18 @@ CREATE TABLE IF NOT EXISTS jobs (
     salary VARCHAR(100),
     description TEXT,
     requirements TEXT,
-    posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    employment_type VARCHAR(100),
+    application_deadline DATE,
+    posted_by INT,
+    contact_email VARCHAR(255),
+    category VARCHAR(120) DEFAULT 'Others',
+    entry_level TINYINT(1) DEFAULT 0,
+    no_degree_required TINYINT(1) DEFAULT 0,
+    remote_job TINYINT(1) DEFAULT 0,
+    part_time TINYINT(1) DEFAULT 0,
+    high_paying TINYINT(1) DEFAULT 0,
+    fast_hiring TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create applications table
@@ -26,6 +37,15 @@ CREATE TABLE IF NOT EXISTS applications (
     user_id INT NOT NULL,
     job_id INT NOT NULL,
     resume_link VARCHAR(255),
+    qualification_text TEXT,
+    document_name VARCHAR(255),
+    document_path VARCHAR(255),
+    other_document_name VARCHAR(255),
+    other_document_path VARCHAR(255),
+    full_name VARCHAR(255),
+    applicant_email VARCHAR(255),
+    phone VARCHAR(100),
+    cover_letter TEXT,
     status VARCHAR(50) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
