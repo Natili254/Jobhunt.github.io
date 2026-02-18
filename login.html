@@ -342,7 +342,7 @@ const hostName = window.location.hostname;
 const localHostCandidates = hostName && hostName !== "localhost" && hostName !== "127.0.0.1"
     ? [`http://${hostName}:5001`, `http://${hostName}:5000`]
     : [];
-const apiCandidates = [...localHostCandidates, "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000", ""];
+const apiCandidates = ["https://jobhunt-github-io-2.onrender.com"];
 
 async function apiFetch(path, options = {}) {
     let lastError = "Unable to connect to backend";
@@ -495,6 +495,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
 </body>
 </html>
+
 
 
 
