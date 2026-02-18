@@ -128,7 +128,11 @@ let currentUser = null;
 let selectedJob = null;
 let apiBase = null;
 
-const apiCandidates = ["", "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000"];
+const hostName = window.location.hostname;
+const localHostCandidates = hostName && hostName !== "localhost" && hostName !== "127.0.0.1"
+    ? [`http://${hostName}:5001`, `http://${hostName}:5000`]
+    : [];
+const apiCandidates = ["", ...localHostCandidates, "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000"];
 
 function parseJobId() {
     const params = new URLSearchParams(window.location.search);

@@ -27,31 +27,13 @@
         .application-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
         .application-actions button { padding: 7px 10px; font-size: 13px; }
         .application-actions button:disabled { opacity: 0.65; cursor: not-allowed; }
+        .employer-top-nav { display: flex; gap: 8px; }
+        .employer-top-nav button { background: #2563eb; font-size: 13px; padding: 8px 12px; }
         .seeker-top-nav { display: flex; gap: 8px; }
         .seeker-top-nav button { background: #059669; font-size: 13px; padding: 8px 12px; }
+        .employer-top-nav.hidden,
         .seeker-top-nav.hidden { display: none; }
         .application-card.seek-view { background: #fff; }
-        .dashboard-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0; }
-        .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
-        .stat-card .label { font-size: 12px; color: #64748b; }
-        .stat-card .value { font-size: 22px; font-weight: 700; color: #0f172a; margin-top: 4px; }
-        .dashboard-actions { margin: 8px 0 14px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
-        .dashboard-actions ul { margin: 8px 0 0 16px; padding: 0; }
-        .email-modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .email-modal-backdrop.hidden { display: none; }
-        .email-modal { width: min(720px, 92vw); background: #fff; border-radius: 12px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25); padding: 16px; }
-        .email-modal h3 { margin: 0 0 8px; }
-        .email-modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
-        .email-modal .actions button { min-width: 90px; }
-        .welcome-animated {
-            display: inline-block;
-            animation: welcomeFloat 5s ease-in-out infinite;
-        }
-        @keyframes welcomeFloat {
-            0% { transform: translateY(0); opacity: 0.92; }
-            50% { transform: translateY(-4px); opacity: 1; }
-            100% { transform: translateY(0); opacity: 0.92; }
-        }
         .filters-wrap { margin-top: 10px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f8fafc; }
         .filter-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
         .filter-grid label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; }
@@ -71,26 +53,6 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
             margin-top: 16px;
-        }
-        .welcome-ticker {
-            grid-column: 1 / -1;
-            overflow: hidden;
-            border: 1px solid #dbeafe;
-            background: #eff6ff;
-            border-radius: 10px;
-            padding: 8px 0;
-        }
-        .welcome-ticker-text {
-            margin: 0;
-            white-space: nowrap;
-            color: #1e3a8a;
-            font-weight: 600;
-            padding-left: 100%;
-            animation: tickerMove 16s linear infinite;
-        }
-        @keyframes tickerMove {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-120%); }
         }
         .landing-card {
             background: #fff;
@@ -133,6 +95,10 @@
         <h1>Job Hunt</h1>
         <div class="nav-links">
             <a href="index.html?home=1" class="nav-link">Home</a>
+            <div id="employer-top-nav" class="employer-top-nav hidden">
+                <button type="button" onclick="scrollToEmployerSection('employer-jobs')">Posted Jobs</button>
+                <button type="button" onclick="scrollToEmployerSection('employer-applications')">Applications</button>
+            </div>
             <div id="seeker-top-nav" class="seeker-top-nav hidden">
                 <button type="button" onclick="openMyApplicationsPage()">My Applications</button>
             </div>
@@ -142,7 +108,7 @@
 
     <div class="banner">
         <h3>Welcome to Job Hunt</h3>
-        <p id="welcome-text" class="welcome-animated">Where Talent Meets Opportunity<br><br>Finding the right job or the right employee shouldn’t be stressful. Our platform is designed to help employers find dependable, hardworking talent while helping job seekers discover meaningful opportunities that match their skills and ambitions.</p>
+        <p id="welcome-text">Sign in to continue.</p>
     </div>
 
     <div id="guest-panel" class="panel">
@@ -163,9 +129,11 @@
         </div>
 
         <div class="landing-grid">
-            <div class="welcome-ticker">
-                <p class="welcome-ticker-text">Welcome to Job Hunt, your space to discover opportunities, apply with confidence, and grow your career journey.</p>
-            </div>
+            <p class="muted" style="grid-column:1 / -1; margin: 0;">
+                Where Talent Meets Opportunity
+
+Finding the right job or the right employee shouldn’t be stressful. Our platform is designed to help employers find dependable, hardworking talent while helping job seekers discover meaningful opportunities that match their skills and ambitions.
+            </p>
             <div class="landing-card clickable" onclick="goToLogin()" role="button" tabindex="0">
                 <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80" alt="Job seeker planning career">
                 <div class="content">
@@ -194,10 +162,6 @@
         <h2>Employer Dashboard</h2>
         <p class="muted">Post new openings and manage hiring.</p>
 
-        <h3>Overview</h3>
-        <div id="employer-dashboard-stats" class="dashboard-stats"></div>
-        <div id="employer-dashboard-actions" class="dashboard-actions"></div>
-
         <h3>Post a Job</h3>
         <form id="postJobForm">
             <div class="row">
@@ -209,11 +173,7 @@
                 <input id="job-salary" type="text" placeholder="Salary range">
             </div>
             <div class="row">
-                <select id="job-employment-type">
-                    <option value="entry level">Entry Level</option>
-                    <option value="internship">Internship</option>
-                    <option value="permanent">Permanent</option>
-                </select>
+                <input id="job-employment-type" type="text" placeholder="Employment type (Full-time, Contract)">
                 <input id="job-deadline" type="date" placeholder="Application deadline">
             </div>
             <select id="job-category">
@@ -247,15 +207,14 @@
         </form>
         <div id="employer-status" class="status"></div>
 
-        <h3>Jobs You Posted</h3>
         <div id="employer-jobs"></div>
-        <h3>Review Applications</h3>
         <div class="row">
-            <select id="employer-job-filter" onchange="handleEmployerJobTypeFilterChange()">
-                <option value="all">All Job Types</option>
-                <option value="entry level">Entry Level</option>
-                <option value="internship">Internship</option>
-                <option value="permanent">Permanent</option>
+            <select id="employer-status-filter" onchange="handleApplicationsStatusFilterChange()">
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
             </select>
         </div>
         <div id="applications-filter-meta" class="meta"></div>
@@ -314,19 +273,6 @@
         <div id="apply-status" class="status"></div>
     </div>
 
-    <div id="email-modal-backdrop" class="email-modal-backdrop hidden">
-        <div class="email-modal">
-            <h3>Send Email to Applicant</h3>
-            <p id="email-modal-target" class="meta"></p>
-            <input id="email-subject" type="text" placeholder="Email subject">
-            <textarea id="email-message" placeholder="Write your message"></textarea>
-            <div class="actions">
-                <button type="button" onclick="closeEmailModal()" style="background:#9ca3af;">Cancel</button>
-                <button type="button" onclick="submitEmployerEmail()">Send</button>
-            </div>
-        </div>
-    </div>
-
     <footer class="site-footer">
         <div class="footer-grid">
             <div>
@@ -363,14 +309,16 @@ let filteredJobs = [];
 let appliedJobIds = new Set();
 let employerApplications = [];
 let selectedEmployerJobId = null;
-let selectedEmployerJobType = "all";
+let selectedEmployerStatus = "all";
 let selectedJob = null;
-let emailDraft = null;
 let currentUser = null;
 let apiBase = null;
 
-const apiCandidates = ["", "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000"];
-const guestWelcomeText = "Where Talent Meets Opportunity<br><br>Finding the right job or the right employee shouldn’t be stressful. Our platform is designed to help employers find dependable, hardworking talent while helping job seekers discover meaningful opportunities that match their skills and ambitions.";
+const hostName = window.location.hostname;
+const localHostCandidates = hostName && hostName !== "localhost" && hostName !== "127.0.0.1"
+    ? [`http://${hostName}:5001`, `http://${hostName}:5000`]
+    : [];
+const apiCandidates = ["", ...localHostCandidates, "http://127.0.0.1:5001", "http://localhost:5001", "http://localhost:5000"];
 
 function goToLogin() {
     localStorage.setItem("authTab", "login");
@@ -435,12 +383,6 @@ async function apiFetch(path, options = {}) {
     return fetch(`${base}${path}`, { ...options, headers });
 }
 
-function toAssetUrl(filePath) {
-    if (!filePath) return "";
-    if (/^https?:\/\//i.test(filePath)) return filePath;
-    return `${apiBase || ""}${filePath}`;
-}
-
 function showOnly(panelId) {
     ["guest-panel", "employer-panel", "seeker-panel"].forEach((id) => {
         document.getElementById(id).classList.add("hidden");
@@ -457,7 +399,9 @@ function setGuestHomeActions(loggedIn) {
 }
 
 function setEmployerTopNav(visible) {
-    return visible;
+    const nav = document.getElementById("employer-top-nav");
+    if (!nav) return;
+    nav.classList.toggle("hidden", !visible);
 }
 
 function setSeekerTopNav(visible) {
@@ -521,47 +465,9 @@ function normalizeApplicationStatus(status) {
     return status || "Not Yet Reviewed";
 }
 
-function renderEmployerDashboardSummary() {
-    const statsHolder = document.getElementById("employer-dashboard-stats");
-    const actionsHolder = document.getElementById("employer-dashboard-actions");
-    if (!statsHolder || !actionsHolder || !currentUser) return;
-
-    const mineJobs = allJobs.filter((j) => j.posted_by === currentUser.id);
-    const totalApps = employerApplications.length;
-    const pending = employerApplications.filter((a) => a.status === "pending");
-    const shortlisted = employerApplications.filter((a) => a.status === "shortlisted").length;
-    const approved = employerApplications.filter((a) => a.status === "approved").length;
-    const rejected = employerApplications.filter((a) => a.status === "rejected").length;
-
-    statsHolder.innerHTML = `
-        <div class="stat-card"><div class="label">Jobs Posted</div><div class="value">${mineJobs.length}</div></div>
-        <div class="stat-card"><div class="label">Total Applications</div><div class="value">${totalApps}</div></div>
-        <div class="stat-card"><div class="label">Needs Review</div><div class="value">${pending.length}</div></div>
-        <div class="stat-card"><div class="label">Shortlisted</div><div class="value">${shortlisted}</div></div>
-        <div class="stat-card"><div class="label">Approved</div><div class="value">${approved}</div></div>
-        <div class="stat-card"><div class="label">Rejected</div><div class="value">${rejected}</div></div>
-    `;
-
-    if (!pending.length) {
-        actionsHolder.innerHTML = "<strong>Activities Required:</strong><p class='muted'>No pending applications right now.</p>";
-        return;
-    }
-
-    actionsHolder.innerHTML = `
-        <strong>Activities Required:</strong>
-        <ul>
-            ${pending.slice(0, 5).map((a) => `<li>Review <strong>${a.full_name || "Applicant"}</strong> for <strong>${a.job_title}</strong></li>`).join("")}
-        </ul>
-    `;
-}
-
 function renderEmployerJobs() {
     const holder = document.getElementById("employer-jobs");
-    let mine = allJobs.filter((j) => j.posted_by === currentUser.id);
-    if (selectedEmployerJobType !== "all") {
-        mine = mine.filter((j) => (j.employment_type || "").toLowerCase() === selectedEmployerJobType);
-    }
-    renderEmployerDashboardSummary();
+    const mine = allJobs.filter((j) => j.posted_by === currentUser.id);
 
     if (mine.length === 0) {
         holder.innerHTML = "<p class='muted'>No jobs posted yet.</p>";
@@ -574,7 +480,6 @@ function renderEmployerJobs() {
             <p><strong>Company:</strong> ${job.company}</p>
             <p><strong>Location:</strong> ${job.location}</p>
             <p><strong>Salary:</strong> ${job.salary || "Not specified"}</p>
-            <p><strong>Employment Type:</strong> ${job.employment_type || "Not specified"}</p>
             <p><strong>Contact Email:</strong> ${job.contact_email || "Not provided"}</p>
             <p>${job.description}</p>
             <div class="job-actions">
@@ -597,14 +502,12 @@ function clearApplicationsFilter() {
     renderEmployerApplications();
 }
 
-function handleEmployerJobTypeFilterChange() {
-    selectedEmployerJobType = document.getElementById("employer-job-filter").value;
-    renderEmployerJobs();
+function handleApplicationsStatusFilterChange() {
+    selectedEmployerStatus = document.getElementById("employer-status-filter").value;
     renderEmployerApplications();
 }
 
 function renderEmployerApplications() {
-    renderEmployerDashboardSummary();
     const filterMeta = document.getElementById("applications-filter-meta");
     const holder = document.getElementById("employer-applications");
     let rows = employerApplications;
@@ -618,14 +521,11 @@ function renderEmployerApplications() {
         filters.push("Job: all your posted jobs");
     }
 
-    if (selectedEmployerJobType !== "all") {
-        rows = rows.filter((a) => {
-            const job = allJobs.find((j) => j.id === a.job_id);
-            return (job?.employment_type || "").toLowerCase() === selectedEmployerJobType;
-        });
-        filters.push(`Type: <strong>${selectedEmployerJobType}</strong>`);
+    if (selectedEmployerStatus !== "all") {
+        rows = rows.filter((a) => a.status === selectedEmployerStatus);
+        filters.push(`Status: <strong>${selectedEmployerStatus}</strong>`);
     } else {
-        filters.push("Type: all");
+        filters.push("Status: all");
     }
     filterMeta.innerHTML = `Showing applications for ${filters.join(" | ")}`;
 
@@ -642,14 +542,12 @@ function renderEmployerApplications() {
             <p><strong>Status:</strong> <span class="status-badge ${a.status}">${normalizeApplicationStatus(a.status)}</span></p>
             <p><strong>Cover Letter:</strong> ${a.cover_letter || "N/A"}</p>
             <p><strong>Qualifications:</strong> ${a.qualification_text || "N/A"}</p>
-            ${a.document_path ? `<a class="action-link" href="${toAssetUrl(a.document_path)}" target="_blank" rel="noreferrer">View Resume</a>` : ""}
-            ${a.other_document_path ? `<a class="action-link" href="${toAssetUrl(a.other_document_path)}" target="_blank" rel="noreferrer">View Other Document</a>` : ""}
+            ${a.document_path ? `<a class="action-link" href="${a.document_path}" target="_blank" rel="noreferrer">View Document</a>` : ""}
             <div class="application-actions">
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'approved')" ${a.status === "approved" ? "disabled" : ""}>Approve</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'shortlisted')" ${a.status === "shortlisted" ? "disabled" : ""} style="background:#0ea5e9;">Shortlist</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'pending')" ${a.status === "pending" ? "disabled" : ""} style="background:#d1d5db;color:#111827;">Pending</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'rejected')" ${a.status === "rejected" ? "disabled" : ""} style="background:#ef4444;">Reject</button>
-                ${["approved", "shortlisted"].includes(a.status) ? `<button type="button" onclick="openEmailModal(${a.application_id}, '${a.status}', '${(a.full_name || "Applicant").replace(/'/g, "\\'")}', '${(a.applicant_email || "").replace(/'/g, "\\'")}')">Send Mail</button>` : ""}
             </div>
         </div>
     `).join("");
@@ -673,59 +571,6 @@ async function updateApplicationStatus(applicationId, statusValue) {
         status.className = "status ok";
         await loadEmployerApplications();
         renderEmployerApplications();
-    } catch (err) {
-        status.textContent = err.message;
-        status.className = "status err";
-    }
-}
-
-function openEmailModal(applicationId, currentStatus, applicantName, applicantEmail) {
-    emailDraft = { applicationId, currentStatus, applicantName, applicantEmail };
-    const defaultSubject = currentStatus === "approved"
-        ? "Application Approved - Next Steps"
-        : "Application Shortlisted - Next Steps";
-    const defaultMessage = currentStatus === "approved"
-        ? `Hello ${applicantName}, your application has been approved. Please reply with your availability for the next interview step.`
-        : `Hello ${applicantName}, your application has been shortlisted. Please reply with your availability for the next interview step.`;
-    document.getElementById("email-subject").value = defaultSubject;
-    document.getElementById("email-message").value = defaultMessage;
-    document.getElementById("email-modal-target").textContent = `To: ${applicantName} (${applicantEmail || "No email"})`;
-    document.getElementById("email-modal-backdrop").classList.remove("hidden");
-}
-
-function closeEmailModal() {
-    emailDraft = null;
-    document.getElementById("email-modal-backdrop").classList.add("hidden");
-}
-
-async function submitEmployerEmail() {
-    const status = document.getElementById("employer-status");
-    if (!emailDraft) return;
-    const subjectInput = document.getElementById("email-subject").value.trim();
-    const messageInput = document.getElementById("email-message").value.trim();
-    if (!messageInput) {
-        status.textContent = "Email message cannot be empty.";
-        status.className = "status err";
-        return;
-    }
-    status.textContent = "Sending email...";
-    status.className = "status";
-
-    try {
-        const res = await apiFetch(`/api/jobs/employer/applications/${emailDraft.applicationId}/email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                subject: subjectInput,
-                message: messageInput
-            })
-        });
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.message || "Failed to send email");
-
-        status.textContent = "Email sent successfully.";
-        status.className = "status ok";
-        closeEmailModal();
     } catch (err) {
         status.textContent = err.message;
         status.className = "status err";
@@ -931,7 +776,7 @@ async function init() {
             setSeekerTopNav(false);
             setGuestHomeActions(false);
             showOnly("guest-panel");
-            document.getElementById("welcome-text").innerHTML = guestWelcomeText;
+            document.getElementById("welcome-text").textContent = "Login as employer to post jobs, or as job seeker to apply.";
             return;
         }
 
@@ -980,3 +825,4 @@ init();
 </script>
 </body>
 </html>
+

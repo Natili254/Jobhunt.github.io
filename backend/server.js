@@ -1,4 +1,5 @@
 const path = require("path");
+const os = require("os");
 require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
 const express = require("express");
 const cors = require("cors");
@@ -57,9 +58,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const HOST = "0.0.0.0";
+app.listen(PORT, HOST, () => {
+    const lanIp = Object.values(os.networkInterfaces())
+        .flat()
+        .find((i) => i && i.family === "IPv4" && !i.internal)?.address;
     console.log(`Server running on port ${PORT}`);
     console.log(`API Base URL: http://localhost:${PORT}`);
+    if (lanIp) {
+        console.log(`LAN URL: http://${lanIp}:${PORT}`);
+    }
     console.log(`Test Jobs: http://localhost:${PORT}/api/jobs`);
     console.log(`Test Health: http://localhost:${PORT}/health`);
 });
