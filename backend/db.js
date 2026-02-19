@@ -12,11 +12,11 @@ const pool = process.env.DATABASE_URL
         ssl: sslEnabled ? { rejectUnauthorized: false } : false
     })
     : new Pool({
-        host: process.env.DB_HOST || "localhost",
-        port: Number(process.env.DB_PORT || 5432),
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
+        host: process.env.DB_HOST || process.env.PGHOST || "localhost",
+        port: Number(process.env.DB_PORT || process.env.PGPORT || 5432),
+        user: process.env.DB_USER || process.env.PGUSER,
+        password: process.env.DB_PASSWORD || process.env.PGPASSWORD,
+        database: process.env.DB_NAME || process.env.PGDATABASE,
         ssl: sslEnabled ? { rejectUnauthorized: false } : false
     });
 
