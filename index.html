@@ -390,6 +390,19 @@ async function apiFetch(path, options = {}) {
     return fetch(`${base}${path}`, { ...options, headers });
 }
 
+function buildAssetUrl(filePath) {
+    if (!filePath) return "";
+    if (/^https?:\/\//i.test(filePath)) return filePath;
+    const remoteBase = apiCandidates.find((c) => /^https?:\/\//i.test(c)) || "";
+    const base = apiBase || remoteBase;
+    if (!base) return filePath;
+    return `${base}${filePath.startsWith("/") ? "" : "/"}${filePath}`;
+}
+
+function canEmailApplicant(status) {
+    return status === "approved" || status === "shortlisted";
+}
+
 function showOnly(panelId) {
     ["guest-panel", "employer-panel", "seeker-panel"].forEach((id) => {
         document.getElementById(id).classList.add("hidden");
@@ -549,12 +562,14 @@ function renderEmployerApplications() {
             <p><strong>Status:</strong> <span class="status-badge ${a.status}">${normalizeApplicationStatus(a.status)}</span></p>
             <p><strong>Cover Letter:</strong> ${a.cover_letter || "N/A"}</p>
             <p><strong>Qualifications:</strong> ${a.qualification_text || "N/A"}</p>
-            ${a.document_path ? `<a class="action-link" href="${a.document_path}" target="_blank" rel="noreferrer">View Document</a>` : ""}
+            ${a.document_path ? `<a class="action-link" href="${buildAssetUrl(a.document_path)}" target="_blank" rel="noreferrer">View Resume</a>` : ""}
+            ${a.other_document_path ? `<a class="action-link" href="${buildAssetUrl(a.other_document_path)}" target="_blank" rel="noreferrer">View Other Document</a>` : ""}
             <div class="application-actions">
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'approved')" ${a.status === "approved" ? "disabled" : ""}>Approve</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'shortlisted')" ${a.status === "shortlisted" ? "disabled" : ""} style="background:#0ea5e9;">Shortlist</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'pending')" ${a.status === "pending" ? "disabled" : ""} style="background:#d1d5db;color:#111827;">Pending</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'rejected')" ${a.status === "rejected" ? "disabled" : ""} style="background:#ef4444;">Reject</button>
+                ${canEmailApplicant(a.status) ? `<button type="button" onclick="sendEmailToApplicant(${a.application_id})" style="background:#2563eb;">Send Email</button>` : ""}
             </div>
         </div>
     `).join("");
@@ -578,6 +593,54 @@ async function updateApplicationStatus(applicationId, statusValue) {
         status.className = "status ok";
         await loadEmployerApplications();
         renderEmployerApplications();
+    } catch (err) {
+        status.textContent = err.message;
+        status.className = "status err";
+    }
+}
+
+async function sendEmailToApplicant(applicationId) {
+    const status = document.getElementById("employer-status");
+    const application = employerApplications.find((a) => Number(a.application_id) === Number(applicationId));
+
+    if (!application) {
+        status.textContent = "Application not found.";
+        status.className = "status err";
+        return;
+    }
+
+    if (!canEmailApplicant(application.status)) {
+        status.textContent = "You can email only approved or shortlisted applicants.";
+        status.className = "status err";
+        return;
+    }
+
+    const defaultSubject = `Update on your application: ${application.job_title} at ${application.company}`;
+    const subject = window.prompt("Email subject", defaultSubject);
+    if (subject === null) return;
+
+    const defaultMessage = `Hello ${application.full_name || "Applicant"},\n\nYou have been ${application.status} for ${application.job_title} at ${application.company}.\nPlease reply to this email for next steps.\n\nRegards,\n${application.company}`;
+    const message = window.prompt("Email message", defaultMessage);
+    if (message === null) return;
+    if (!message.trim()) {
+        status.textContent = "Email message is required.";
+        status.className = "status err";
+        return;
+    }
+
+    status.textContent = "Sending email to applicant...";
+    status.className = "status";
+
+    try {
+        const res = await apiFetch(`/api/jobs/employer/applications/${applicationId}/email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subject, message })
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.message || "Failed to send email");
+        status.textContent = `Email sent to ${application.applicant_email}.`;
+        status.className = "status ok";
     } catch (err) {
         status.textContent = err.message;
         status.className = "status err";
