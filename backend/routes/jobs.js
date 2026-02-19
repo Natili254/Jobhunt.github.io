@@ -442,6 +442,7 @@ router.get("/employer/applications", auth, async (req, res) => {
                 a.phone,
                 a.cover_letter,
                 a.qualification_text,
+                a.resume_link,
                 a.document_name,
                 a.document_path,
                 a.other_document_name,

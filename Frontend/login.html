@@ -51,12 +51,20 @@
         }
 
         .auth-container {
-            max-width: 450px;
+            width: min(680px, calc(100% - 24px));
             margin: 50px auto;
             padding: 30px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .auth-container form {
+            width: 100%;
+            max-width: none;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
         }
 
         .auth-container h1 {
@@ -200,6 +208,63 @@
 
         .form-group .toggle-password:hover {
             background: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 14px;
+            }
+
+            .navbar h1 {
+                font-size: 22px;
+            }
+
+            .nav-link {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+
+            .auth-container {
+                width: calc(100% - 16px);
+                margin: 14px auto 20px;
+                padding: 18px 14px;
+                border-radius: 12px;
+            }
+
+            .auth-container h1 {
+                margin-bottom: 18px;
+                font-size: 24px;
+            }
+
+            .tabs {
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+
+            .tab-btn {
+                font-size: 15px;
+                padding: 11px 10px;
+            }
+
+            .form-group {
+                margin-bottom: 14px;
+            }
+
+            .form-group input,
+            .form-group select {
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            .form-group button {
+                padding: 13px 12px;
+                font-size: 16px;
+            }
+
+            .form-group .toggle-password {
+                padding: 8px 9px;
+                font-size: 11px;
+            }
         }
     </style>
 </head>

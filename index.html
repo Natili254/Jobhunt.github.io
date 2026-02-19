@@ -572,7 +572,7 @@ function renderEmployerApplications() {
             <p><strong>Status:</strong> <span class="status-badge ${a.status}">${normalizeApplicationStatus(a.status)}</span></p>
             <p><strong>Cover Letter:</strong> ${a.cover_letter || "N/A"}</p>
             <p><strong>Qualifications:</strong> ${a.qualification_text || "N/A"}</p>
-            ${a.document_path ? `<a class="action-link" href="${buildAssetUrl(a.document_path)}" target="_blank" rel="noreferrer">View Resume</a>` : ""}
+            ${(a.document_path || a.resume_link) ? `<a class="action-link" href="${buildAssetUrl(a.document_path || a.resume_link)}" target="_blank" rel="noreferrer">View Resume</a>` : ""}
             ${a.other_document_path ? `<a class="action-link" href="${buildAssetUrl(a.other_document_path)}" target="_blank" rel="noreferrer">View Other Document</a>` : ""}
             <div class="application-actions">
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'approved')" ${a.status === "approved" ? "disabled" : ""}>Approve</button>
