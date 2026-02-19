@@ -313,6 +313,7 @@ let selectedEmployerStatus = "all";
 let selectedJob = null;
 let currentUser = null;
 let apiBase = null;
+let openEmailComposerId = null;
 
 const hostName = window.location.hostname;
 const localHostCandidates = hostName && hostName !== "localhost" && hostName !== "127.0.0.1"
@@ -401,6 +402,15 @@ function buildAssetUrl(filePath) {
 
 function canEmailApplicant(status) {
     return status === "approved" || status === "shortlisted";
+}
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
 function showOnly(panelId) {
@@ -569,8 +579,24 @@ function renderEmployerApplications() {
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'shortlisted')" ${a.status === "shortlisted" ? "disabled" : ""} style="background:#0ea5e9;">Shortlist</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'pending')" ${a.status === "pending" ? "disabled" : ""} style="background:#d1d5db;color:#111827;">Pending</button>
                 <button type="button" onclick="updateApplicationStatus(${a.application_id}, 'rejected')" ${a.status === "rejected" ? "disabled" : ""} style="background:#ef4444;">Reject</button>
-                ${canEmailApplicant(a.status) ? `<button type="button" onclick="sendEmailToApplicant(${a.application_id})" style="background:#2563eb;">Send Email</button>` : ""}
+                ${canEmailApplicant(a.status) ? `<button type="button" onclick="openEmailComposer(${a.application_id})" style="background:#2563eb;">Send Email</button>` : ""}
             </div>
+            ${openEmailComposerId === a.application_id ? `
+                <div style="margin-top:10px;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;">
+                    <p class="meta"><strong>To:</strong> ${escapeHtml(a.applicant_email || "N/A")}</p>
+                    <input id="email-subject-${a.application_id}" type="text" value="${escapeHtml(`Update on your application: ${a.job_title} at ${a.company}`)}" placeholder="Email subject">
+                    <textarea id="email-body-${a.application_id}" placeholder="Write your message">Hello ${escapeHtml(a.full_name || "Applicant")},
+
+You have been ${escapeHtml(a.status)} for ${escapeHtml(a.job_title)} at ${escapeHtml(a.company)}.
+
+Regards,
+${escapeHtml(a.company)}</textarea>
+                    <div class="application-actions">
+                        <button type="button" onclick="launchApplicantEmail(${a.application_id})" style="background:#2563eb;">Open Email App</button>
+                        <button type="button" onclick="cancelEmailComposer()" style="background:#9ca3af;">Cancel</button>
+                    </div>
+                </div>
+            ` : ""}
         </div>
     `).join("");
 }
@@ -599,7 +625,17 @@ async function updateApplicationStatus(applicationId, statusValue) {
     }
 }
 
-async function sendEmailToApplicant(applicationId) {
+function openEmailComposer(applicationId) {
+    openEmailComposerId = Number(applicationId);
+    renderEmployerApplications();
+}
+
+function cancelEmailComposer() {
+    openEmailComposerId = null;
+    renderEmployerApplications();
+}
+
+function launchApplicantEmail(applicationId) {
     const status = document.getElementById("employer-status");
     const application = employerApplications.find((a) => Number(a.application_id) === Number(applicationId));
 
@@ -615,36 +651,30 @@ async function sendEmailToApplicant(applicationId) {
         return;
     }
 
-    const defaultSubject = `Update on your application: ${application.job_title} at ${application.company}`;
-    const subject = window.prompt("Email subject", defaultSubject);
-    if (subject === null) return;
-
-    const defaultMessage = `Hello ${application.full_name || "Applicant"},\n\nYou have been ${application.status} for ${application.job_title} at ${application.company}.\nPlease reply to this email for next steps.\n\nRegards,\n${application.company}`;
-    const message = window.prompt("Email message", defaultMessage);
-    if (message === null) return;
-    if (!message.trim()) {
-        status.textContent = "Email message is required.";
+    const recipient = String(application.applicant_email || "").trim();
+    if (!recipient) {
+        status.textContent = "Applicant email is missing.";
         status.className = "status err";
         return;
     }
 
-    status.textContent = "Sending email to applicant...";
-    status.className = "status";
+    const subjectInput = document.getElementById(`email-subject-${applicationId}`);
+    const bodyInput = document.getElementById(`email-body-${applicationId}`);
+    const subject = (subjectInput?.value || "").trim() || `Update on your application: ${application.job_title} at ${application.company}`;
+    const body = (bodyInput?.value || "").trim();
 
-    try {
-        const res = await apiFetch(`/api/jobs/employer/applications/${applicationId}/email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subject, message })
-        });
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.message || "Failed to send email");
-        status.textContent = `Email sent to ${application.applicant_email}.`;
-        status.className = "status ok";
-    } catch (err) {
-        status.textContent = err.message;
+    if (!body) {
+        status.textContent = "Please enter an email message.";
         status.className = "status err";
+        return;
     }
+
+    const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+    status.textContent = `Opening email composer for ${recipient}.`;
+    status.className = "status ok";
+    openEmailComposerId = null;
+    renderEmployerApplications();
 }
 
 function renderSeekerJobs() {
