@@ -122,6 +122,61 @@ async function addColumnIfMissing(table, column, definition) {
 }
 
 async function ensureSchema() {
+    await runQuery(`
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            role VARCHAR(50) NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await runQuery(`
+        CREATE TABLE IF NOT EXISTS jobs (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            company VARCHAR(255) NOT NULL,
+            location VARCHAR(255) NOT NULL,
+            salary VARCHAR(120),
+            description TEXT NOT NULL,
+            requirements TEXT,
+            employment_type VARCHAR(100),
+            application_deadline DATE,
+            posted_by INTEGER,
+            contact_email VARCHAR(255),
+            category VARCHAR(120) DEFAULT 'Others',
+            entry_level BOOLEAN DEFAULT FALSE,
+            no_degree_required BOOLEAN DEFAULT FALSE,
+            remote_job BOOLEAN DEFAULT FALSE,
+            part_time BOOLEAN DEFAULT FALSE,
+            high_paying BOOLEAN DEFAULT FALSE,
+            fast_hiring BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await runQuery(`
+        CREATE TABLE IF NOT EXISTS applications (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            job_id INTEGER NOT NULL,
+            resume_link TEXT,
+            qualification_text TEXT,
+            document_name VARCHAR(255),
+            document_path VARCHAR(255),
+            full_name VARCHAR(255),
+            applicant_email VARCHAR(255),
+            phone VARCHAR(100),
+            cover_letter TEXT,
+            other_document_name VARCHAR(255),
+            other_document_path VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     await addColumnIfMissing("jobs", "requirements", "TEXT");
     await addColumnIfMissing("jobs", "employment_type", "VARCHAR(100)");
     await addColumnIfMissing("jobs", "application_deadline", "DATE");
