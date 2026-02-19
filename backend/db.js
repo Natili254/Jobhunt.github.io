@@ -2,7 +2,10 @@ const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env"), override: true });
 const { Pool } = require("pg");
 
-const sslEnabled = String(process.env.DB_SSL || "").toLowerCase() === "true";
+const explicitSsl = String(process.env.DB_SSL || "").toLowerCase();
+const sslEnabled = process.env.DATABASE_URL
+    ? explicitSsl !== "false"
+    : explicitSsl === "true";
 const pool = process.env.DATABASE_URL
     ? new Pool({
         connectionString: process.env.DATABASE_URL,

@@ -16,14 +16,38 @@ function runQuery(sql, params = []) {
     });
 }
 
+async function ensureAuthSchema() {
+    await runQuery(`
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            role VARCHAR(50) NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+}
+
+const authMigrationPromise = ensureAuthSchema().catch((err) => {
+    console.error("Auth schema migration warning:", err.message);
+});
+
 function normalizeRole(role) {
-    if (role === "user") return "jobseeker";
-    return role;
+    const value = String(role || "").toLowerCase().trim();
+    if (value === "user" || value === "jobseeker") return "jobseeker";
+    if (value === "employer") return "employer";
+    return value;
+}
+
+function roleForStorage(role) {
+    return role === "jobseeker" ? "user" : role;
 }
 
 router.post("/register", async (req, res) => {
     const { name, email, password, role } = req.body;
     const normalizedRole = normalizeRole(role);
+    const dbRole = roleForStorage(normalizedRole);
 
     if (!name || !email || !password || !normalizedRole) {
         return res.status(400).json({ message: "All fields are required" });
@@ -43,6 +67,7 @@ router.post("/register", async (req, res) => {
     }
 
     try {
+        await authMigrationPromise;
         const existingUsers = await runQuery("SELECT id FROM users WHERE email = ?", [email]);
         if (existingUsers.length > 0) {
             return res.status(409).json({ message: "Email already registered" });
@@ -51,7 +76,7 @@ router.post("/register", async (req, res) => {
         const hashed = await bcrypt.hash(password, 10);
         const result = await runQuery(
             "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-            [name, email, hashed, normalizedRole]
+            [name, email, hashed, dbRole]
         );
 
         const userId = result.insertId;
@@ -86,6 +111,7 @@ router.post("/login", async (req, res) => {
     }
 
     try {
+        await authMigrationPromise;
         const result = await runQuery("SELECT * FROM users WHERE email = ?", [email]);
         if (result.length === 0) {
             return res.status(401).json({ message: "Invalid email or password" });
@@ -98,7 +124,7 @@ router.post("/login", async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
+            { id: user.id, email: user.email, role: normalizeRole(user.role) },
             JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -111,7 +137,7 @@ router.post("/login", async (req, res) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: normalizeRole(user.role)
             }
         });
     } catch (error) {
@@ -122,6 +148,7 @@ router.post("/login", async (req, res) => {
 
 router.get("/profile", auth, async (req, res) => {
     try {
+        await authMigrationPromise;
         const result = await runQuery(
             "SELECT id, name, email, role FROM users WHERE id = ?",
             [req.user.id]
@@ -131,7 +158,14 @@ router.get("/profile", auth, async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json({ success: true, user: result[0] });
+        const user = result[0];
+        res.status(200).json({
+            success: true,
+            user: {
+                ...user,
+                role: normalizeRole(user.role)
+            }
+        });
     } catch (error) {
         console.error("Profile error:", error.message);
         res.status(500).json({ message: "Failed to fetch user profile" });
@@ -144,6 +178,7 @@ router.post("/logout", auth, (req, res) => {
 
 router.get("/verify", auth, async (req, res) => {
     try {
+        await authMigrationPromise;
         const result = await runQuery(
             "SELECT id, name, email, role FROM users WHERE id = ?",
             [req.user.id]
@@ -153,7 +188,14 @@ router.get("/verify", auth, async (req, res) => {
             return res.status(401).json({ valid: false, error: "Invalid token" });
         }
 
-        res.status(200).json({ valid: true, user: result[0] });
+        const user = result[0];
+        res.status(200).json({
+            valid: true,
+            user: {
+                ...user,
+                role: normalizeRole(user.role)
+            }
+        });
     } catch (error) {
         res.status(401).json({ valid: false, error: "Invalid token" });
     }
